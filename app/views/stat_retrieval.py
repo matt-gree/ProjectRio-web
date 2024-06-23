@@ -932,6 +932,71 @@ def endpoint_star_chances():
         'Data': data
     }
 
+'''
+@Endpoint: Win_Expectancy
+@Description: Return event data from a start of a AB to create a Win Expectancy Model
+@Params:
+    - Game params:           Params for /games/ (tags/users/date/etc)
+    - Event params:
+'''
+@app.route('/win_expectancy/', methods = ['GET'])
+def endpoint_star_chances():
+    #Sanitize games params 
+    try:
+        list_of_event_ids = list() # Holds IDs for all the events we want data from
+        if (len(request.args.getlist('events')) != 0):
+            list_of_event_ids = [int(game_id) for game_id in request.args.getlist('events')]
+            list_of_event_id_tuples = db.session.query(Event.id).filter(Event.id.in_(tuple(list_of_event_ids))).all()
+            if (len(list_of_event_id_tuples) != len(list_of_event_ids)):
+                return abort(408, description='Provided Events not found')
+
+        else:
+            list_of_event_ids = endpoint_event(True)['Events']   # List of dicts of games we want data from and info about those games
+    except:
+        return abort(408, description='Invalid GameID')
+
+    event_id_string, event_empty = format_list_for_SQL(list_of_event_ids)
+
+    if event_empty:
+        return {}
+    
+    query = (
+        'SELECT \n'
+        'event.game_id AS game_id, \n'
+        'game.stadium_id AS stadium, \n'
+        'event.event_num AS event_num, \n'
+        'event.away_score AS away_score, \n'
+        'event.home_score AS home_score, \n'
+        'event.away_stars AS away_stars, \n'
+        'event.home_stars AS home_stars, \n'
+        'event.inning AS inning, \n'
+        'event.half_inning AS half_inning, \n'
+        'event.outs AS outs, \n'
+        'event.runner_on_1 AS runner_on_1, \n'
+        'event.runner_on_2 AS runner_on_2, \n'
+        'event.runner_on_3 AS runner_on_3, \n'
+        'game.away_score AS away_final_score, \n'
+        'game.home_score AS home_final_score, \n'
+        'game_history.winner_incoming_elo AS winner_incoming_elo, \n'
+        'game_history.loser_incoming_elo AS loser_incoming_elo \n'
+        'FROM event \n'
+        'LEFT JOIN game on game.game_id = event.game_id \n'
+        'LEFT JOIN game_history on game_history.game_id = event.game_id \n'
+       f'WHERE event.id IN {event_id_string} AND event.result_of_ab != 0 \n'
+        'AND event.strikes == 0 \n'
+        'AND event.balls == 0'
+
+    )
+
+    result = db.session.execute(query).all()
+
+    data = []
+    for entry in result:
+        data.append(entry._asdict())
+    return {
+        'Data': data
+    }
+
 # @app.route('/pitch_analysis/', methods = ['GET'])
 # def endpoint_pitch_analysis():
 #     #Sanitize games params 
