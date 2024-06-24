@@ -982,7 +982,7 @@ def endpoint_star_chances():
         'FROM event \n'
         'LEFT JOIN game on game.game_id = event.game_id \n'
         'LEFT JOIN game_history on game_history.game_id = event.game_id \n'
-       f'WHERE event.id IN {event_id_string} AND event.result_of_ab != 0 \n'
+       f'WHERE event.id IN {event_id_string} \n'
         'AND event.strikes == 0 \n'
         'AND event.balls == 0'
 
