@@ -175,7 +175,7 @@ def community_add_members():
     if user == None:
         return abort(409, description='Username associated with JWT not found.')
     if comm == None:
-        return abort(410, description='Could not find community with name={in_comm_name}')
+        return abort(410, description=f'Could not find community with name={in_comm_name}')
     
     comm_user = CommunityUser.query.filter_by(user_id=user.id, community_id=comm.id).first()
     if (comm_user == None and not is_user_in_groups(['Admin', 'TrustedUser'])):
@@ -228,7 +228,7 @@ def community_join(in_comm_name = None, in_active_url = None):
     if user == None:
         return abort(409, description='Username associated with JWT not found.')
     if comm == None:
-        return abort(409, description='Could not find community with name={in_comm_name}')
+        return abort(409, description=f'Could not find community with name={in_comm_name}')
 
     # If community is public -> User can join
     # If community is private, has a global url, and the correct url has been provided:
@@ -313,7 +313,7 @@ def community_invite():
     if user == None:
         return abort(409, description='Username associated with JWT not found.')
     if comm == None:
-        return abort(410, description='Could not find community with name={in_comm_name}')
+        return abort(410, description=f'Could not find community with name={in_comm_name}')
 
     #Check if CommunityUser already exists
     comm_user = CommunityUser.query.filter_by(user_id=user.id, community_id=comm.id).first()
@@ -403,7 +403,7 @@ def community_members():
     user=get_user(request)
 
     if comm == None:
-        return abort(409, description='Could not find community with name={in_comm_name}')
+        return abort(409, description=f'Could not find community with name={in_comm_name}')
     
     if comm.private:
         if user == None:
@@ -435,7 +435,7 @@ def community_tags():
     user=get_user(request)
         
     if comm == None:
-        return abort(409, description='Could not find community with name={in_comm_name}')
+        return abort(409, description=f'Could not find community with name={in_comm_name}')
     
     if comm.private:
         if user == None:
@@ -480,7 +480,7 @@ def community_manage():
     user=get_user(request)
 
     if comm == None:
-        return abort(409, description='Could not find community with name={in_comm_name}')
+        return abort(409, description=f'Could not find community with name={in_comm_name}')
     if user == None:
         return abort(409, description='No user logged in or associated with RioKey.')
 
@@ -574,7 +574,7 @@ def community_sponsor():
     comm = Community.query.filter_by(name_lowercase=comm_name_lower).first()
 
     if comm == None:
-        return abort(409, description='Could not find community with name={in_comm_name}')
+        return abort(409, description=f'Could not find community with name={in_comm_name}')
 
     # Action - Get, Remove, Add
     action = lower_and_remove_nonalphanumeric(request.json['action'])
@@ -652,7 +652,7 @@ def community_key():
     user=get_user(request)
     
     if comm == None:
-        return abort(410, description='Could not find community with name={in_comm_name}')
+        return abort(410, description=f'Could not find community with name={in_comm_name}')
     if user == None:
         return abort(411, description='No user logged in or associated with RioKey.')
 
