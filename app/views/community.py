@@ -134,7 +134,7 @@ def community_remove_members():
     if user == None:
         return abort(409, description='Username associated with JWT not found.')
     if comm == None:
-        return abort(410, description='Could not find community with name={in_comm_name}')
+        return abort(410, description=f'Could not find community with name={in_comm_name}')
     
     comm_user = CommunityUser.query.filter_by(user_id=user.id, community_id=comm.id).first()
     if (comm_user == None and not is_user_in_groups(['Admin', 'TrustedUser'])):
@@ -331,7 +331,7 @@ def community_invite():
         invited_user = RioUser.query.filter_by(username_lowercase=lower_and_remove_nonalphanumeric(username)).first()
         if invited_user == None:
             print(username)
-            return abort(413, description='User does not exist. Username={user}')
+            return abort(413, description=f'User does not exist. Username={user}')
 
     #Entire list has been validated, add users to table and send emails
     for user in list_of_users_to_invite:
@@ -498,7 +498,7 @@ def community_manage():
             return abort(409, description=f"User does not exist. Username={user['username']}")
         comm_user = CommunityUser.query.filter_by(user_id=invited_user.id, community_id=comm.id).first()
         if comm_user == None:
-            return abort(409, description='User not a part of the community, cannot be made admin. Username={user}')
+            return abort(409, description=f'User not a part of the community, cannot be made admin. Username={user}')
 
     #Entire list has been validated, perform actions
     updated_comm_users_list = list()
@@ -704,7 +704,7 @@ def community_update():
     # Get Comm
     comm = Community.query.filter_by(id=in_comm_id).first()
     if comm == None:
-        return abort(409, description="No community found with id={in_comm_id}")
+        return abort(409, description=f'No community found with id={in_comm_id}')
 
     #Make sure user is admin of community or Rio admin
     user=get_user(request)
