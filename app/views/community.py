@@ -464,6 +464,7 @@ def community_tags():
             "username": "USERNAME",
             "admin": True/False
             "remove": True/False
+            "ban": True/False
             "key": True/False
 
         }
@@ -489,7 +490,8 @@ def community_manage():
         return abort(409, description='User is not part of this community or not an admin.')
 
     list_of_users_to_manage = request.json['user_list']
-    #Check that all users exist before sending invites
+    
+    #Check that all users exist
     for user in list_of_users_to_manage:
         invited_user = RioUser.query.filter_by(username_lowercase=lower_and_remove_nonalphanumeric(user['username'])).first()
         if invited_user == None:
@@ -498,7 +500,7 @@ def community_manage():
         if comm_user == None:
             return abort(409, description='User not a part of the community, cannot be made admin. Username={user}')
 
-    #Entire list has been validated, add users to table and send emails
+    #Entire list has been validated, perform actions
     updated_comm_users_list = list()
     for user_actions in list_of_users_to_manage:
         user = RioUser.query.filter_by(username_lowercase=lower_and_remove_nonalphanumeric(user_actions['username'])).first()
