@@ -22,35 +22,31 @@ def tag_create():
     in_tag_type = request.json['type']
 
     #Fields for gecko codes only
-    gecko_code_desc_provided = request.is_json and 'gecko_code_desc' in request.json
-    gecko_code_desc = request.json.get('gecko_code_desc') if gecko_code_desc_provided else None
-
-    gecko_code_provided = request.is_json and 'gecko_code' in request.json
-    gecko_code = request.json.get('gecko_code') if gecko_code_provided else None
+    gecko_code_desc = str(request.json['gecko_code_desc']) if 'gecko_code_desc' in request.json else None
+    gecko_code = str(request.json.json['gecko_code']) if 'gecko_code' in request.json else None
 
     comm_name_lower = lower_and_remove_nonalphanumeric(in_tag_comm_name)
     comm = Community.query.filter_by(name_lowercase=comm_name_lower).first()
 
-    creating_gecko_code = (in_tag_type == "Gecko Code" and gecko_code_desc_provided and gecko_code_provided)
 
-    if comm == None:
+    if comm is None:
         return abort(409, description="No community found with name={in_tag_comm_name}")
     if in_tag_type not in cTAG_TYPES.values() or in_tag_type == "Competition" or in_tag_type == "Community":
         return abort(410, description="Invalid tag type '{in_tag_type}'")
     # if ((in_tag_type == "Gecko Code" or in_tag_type == "Client Code") and not comm.comm_type == 'Official'):
     #     return abort(411, description="Gecko codes must be added to official community")
-    if (in_tag_type == "Gecko Code" and (not gecko_code_desc_provided or not gecko_code_provided)):
+    if (in_tag_type == "Gecko Code" and (not gecko_code_desc or not gecko_code)):
         return abort(412, description="Type is gecko code but code details not provided")
     if (in_tag_type == "Gecko Code" and not validate_gecko_code(gecko_code)):
         return abort(415, description="Type is gecko code but code is not formatted correctly (<CODE> <CODE><\n>)")
-
+    
 
     #Make sure that tag does not use the same name as an existing tag, comm, or tag_set
     tag = Tag.query.filter_by(name_lowercase=lower_and_remove_nonalphanumeric(in_tag_name)).first()
     comm_name_check = Community.query.filter_by(name_lowercase=lower_and_remove_nonalphanumeric(in_tag_name)).first()
     tag_set = TagSet.query.filter_by(name_lowercase=lower_and_remove_nonalphanumeric(in_tag_name)).first()
 
-    if tag != None or comm_name_check != None or tag_set != None:
+    if (tag is not None) or (comm_name_check is not None) or (tag_set is not None):
         return abort(413, description='Name already in use (Tag, TagSet, or Community)')
 
     # Get user making the new community
@@ -71,7 +67,7 @@ def tag_create():
     db.session.commit()
 
     # === Code Tag Creation ===
-    if (creating_gecko_code):
+    if (in_tag_type == "Gecko Code"):
         new_code_tag = GeckoCodeTag(in_tag_id=new_tag.id, in_gecko_code_desc=gecko_code_desc, in_gecko_code=gecko_code)
         db.session.add(new_code_tag)
         db.session.commit()
