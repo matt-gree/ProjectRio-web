@@ -503,6 +503,8 @@ class PitchSummary(db.Model):
     pitch_speed = db.Column(db.Integer)
     d_ball = db.Column(db.Boolean)
     type_of_swing = db.Column(db.Integer)
+    charge_status = db.Column(db.Integer)
+    star_swing_input = db.Column(db.Integer)
     ball_position_strikezone = db.Column(db.Integer)
     in_strikezone = db.Column(db.Boolean)
     bat_x_contact_pos = db.Column(db.Float)

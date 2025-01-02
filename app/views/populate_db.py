@@ -409,6 +409,8 @@ def populate_db2():
                 bat_z_contact_pos = event_data['Pitch']['Bat Contact Pos - Z'],
                 in_strikezone = event_data['Pitch']['In Strikezone'],
                 type_of_swing = event_data['Pitch']['Type of Swing'],
+                charge_status = event_data['Pitch']['Charge Status'],
+                star_swing_input = event_data['Pitch']['Star Swing Input'],
                 d_ball = event_data['Pitch']['DB'],
             )
 
@@ -489,10 +491,11 @@ def populate_db2():
         # == Star Calcs Offensse ==
         # Batter summary object
         batter_summary = teams['Away'][event_data['Batter Roster Loc']] if event_data['Half Inning'] == 0 else teams['Home'][event_data['Batter Roster Loc']]
-
+        team_stars = event.away_stars if event_data['Half Inning'] == 0 else event.home_stars
+        
         #Bools to make this all more readable
         batter_captainable_char = (Character.query.filter_by(char_id = batter_summary.char_id, captain=1).first() != None)
-        star_swing = (pitch_summary.type_of_swing == 3) # ToDo replace with decode const. 3==star swing
+        star_swing_input = (pitch_summary.star_swing_input == 1) 
         made_contact = (pitch_summary.contact_summary_id != None)
 
         #Contact was made and was caught or landed
@@ -510,20 +513,31 @@ def populate_db2():
                 outs_during_play += 1
         final_pitch_of_atbat = event.result_of_ab > 0
 
-        if (star_swing):
-            batter_summary.offensive_star_swings += 1
-            # Misses, non-captain contact, and captain star cost each cost 1 star.
-            # Contact with a non-captain character costs 2 stars
-            if (made_contact and (batter_captainable_char and batter_summary.captain == False)):
-                batter_summary.offensive_stars_used += 2
-            else:
-                batter_summary.offensive_stars_used += 1
 
-            if (star_put_in_play):
+        if star_swing_input:
+            star_swing = False
+            two_star_swinger = batter_captainable_char and (batter_summary.captain == False)
+            # Only count as a star swing if there are enough stars to be used
+            if made_contact:
+                if two_star_swinger:
+                    if team_stars >= 2:
+                        batter_summary.offensive_stars_used += 2
+                        star_swing = True
+                else:
+                    if team_stars >= 1:
+                        batter_summary.offensive_stars_used += 1
+                        star_swing = True
+                        
+            elif team_stars >= 1:
+                batter_summary.offensive_stars_used += 1
+                star_swing = True
+
+            if star_put_in_play and star_swing:
                 batter_summary.offensive_stars_put_in_play += 1
-        
-            if (star_landed):
+
+            if star_landed and star_swing:
                 batter_summary.offensive_star_successes += 1
+
 
         # == Star Calcs Defense ==
         pitcher_summary = teams['Away'][event_data['Pitcher Roster Loc']] if event_data['Half Inning'] == 1 else teams['Home'][event_data['Pitcher Roster Loc']]
